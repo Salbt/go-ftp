@@ -2,7 +2,9 @@ package internal
 
 import (
 	"fmt"
+	"io"
 	"net"
+	"os"
 	"strings"
 )
 
@@ -14,7 +16,46 @@ func (server *FtpServer) HandleCommands(conn net.Conn) {
 
 }
 
-func (server *FtpServer) HandlerRETR() {
+func (server *FtpServer) HandlerRETR(filename string) {
+	buffer := make([]byte, 1024)
+
+	content, err := os.Open(filename)
+	if err != nil {
+		server.sendMessage(550)
+		server.Log.Printf("File %s not found\n", filename)
+		return
+	}
+
+	defer content.Close()
+
+	server.sendMessage(150)
+	server.Log.Printf("Start transferring file: %s\n", filename)
+
+	for {
+		n, readErr := content.Read(buffer)
+		if n > 0 {
+			_, writeErr := server.conn.Write(buffer[:n])
+			if writeErr != nil {
+				server.Log.Printf("Error writing to connection: %v\n", writeErr)
+				server.sendMessage(426)
+				return
+			}
+		}
+
+		if readErr != nil {
+			if readErr == io.EOF {
+				// 文件读取完成
+				server.sendMessage(226)
+				server.Log.Printf("File transfer complete: %s\n", filename)
+				return
+			}
+
+			// 其他读取错误
+			server.Log.Printf("Error reading file: %v\n", readErr)
+			server.sendMessage(451)
+			return
+		}
+	}
 
 }
 
