@@ -34,7 +34,7 @@ func (server *FtpServer) HandlerRETR(filename string) {
 	for {
 		n, readErr := content.Read(buffer)
 		if n > 0 {
-			_, writeErr := server.conn.Write(buffer[:n])
+			_, writeErr := server.DataConn.Write(buffer[:n])
 			if writeErr != nil {
 				server.Log.Printf("Error writing to connection: %v\n", writeErr)
 				server.sendMessage(426)
@@ -44,7 +44,7 @@ func (server *FtpServer) HandlerRETR(filename string) {
 
 		if readErr != nil {
 			if readErr == io.EOF {
-				// 文件读取完成
+
 				server.sendMessage(226)
 				server.Log.Printf("File transfer complete: %s\n", filename)
 				return
@@ -59,8 +59,44 @@ func (server *FtpServer) HandlerRETR(filename string) {
 
 }
 
-func (server *FtpServer) HandlerSTOR() {
+func (server *FtpServer) HandlerSTOR(filename string) {
+	buffer := make([]byte, 1024)
 
+	file, err := os.Create(filename)
+	if err != nil {
+		server.sendMessage(550)
+		server.Log.Printf("Error creating file: %v\n", err)
+		return
+	}
+	defer file.Close()
+
+	server.sendMessage(150)
+	server.Log.Printf("Start receiving file: %s\n", filename)
+	for {
+		n, readErr := server.DataConn.Read(buffer)
+		if n > 0 {
+
+			_, writeErr := file.Write(buffer[:n])
+			if writeErr != nil {
+				server.Log.Printf("Error writing to file: %v\n", writeErr)
+				server.sendMessage(426) // 426 表示连接关闭，传输中断
+				return
+			}
+		}
+
+		if readErr != nil {
+			if readErr == io.EOF {
+
+				server.sendMessage(226) // 226 表示文件上传成功
+				server.Log.Printf("File upload complete: %s\n", filename)
+				return
+			}
+
+			server.Log.Printf("Error reading from data connection: %v\n", readErr)
+			server.sendMessage(451) // 451 表示请求操作中止，发生本地错误
+			return
+		}
+	}
 }
 
 func (server *FtpServer) handle() {

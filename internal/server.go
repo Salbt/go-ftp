@@ -15,6 +15,8 @@ type FtpServer struct {
 	listener net.Listener
 	conn     net.Conn
 
+	DataConn
+
 	Log *log.Logger
 }
 
