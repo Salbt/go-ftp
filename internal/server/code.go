@@ -1,4 +1,4 @@
-package internal
+package server
 
 import "fmt"
 
@@ -58,6 +58,12 @@ const (
 )
 
 var statusText = map[int]string{
+	// 100
+	StatusRestartMarker: "Restart marker reply.",
+	StatusReadyMinute:   "Service ready in nnn minutes.",
+	StatusAlreadyOpen:   "Data connection already open; transfer starting.",
+	StatusAboutToSend:   "File status okay; about to open data connection.",
+
 	// 200
 	StatusCommandOK:             "Command okay.",
 	StatusCommandNotImplemented: "Command not implemented, superfluous at this site.",

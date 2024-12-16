@@ -1,4 +1,4 @@
-package internal
+package server
 
 import (
 	"fmt"
@@ -8,7 +8,7 @@ import (
 
 type FtpServer struct {
 	IP       string
-	Port     string
+	Port     uint16
 	Username string
 	Password string
 
@@ -20,7 +20,7 @@ type FtpServer struct {
 	Log *log.Logger
 }
 
-func NewServer(ip, port, username, password string) *FtpServer {
+func NewServer(ip string, port uint16, username, password string) *FtpServer {
 	return &FtpServer{
 		IP:       ip,
 		Port:     port,

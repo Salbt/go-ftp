@@ -1,4 +1,4 @@
-package internal
+package server
 
 const (
 	host     = "127.0.0.1"

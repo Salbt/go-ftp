@@ -1,6 +1,7 @@
-package internal
+package server
 
 import (
+	"errors"
 	"fmt"
 	"io"
 	"net"
@@ -22,7 +23,7 @@ type Conn interface {
 
 type DataConn struct {
 	ip       string
-	port     string
+	port     uint16
 	dataType string
 	conn     net.Conn
 }
@@ -31,7 +32,7 @@ func (d *DataConn) Host() string {
 	return d.ip
 }
 
-func (d *DataConn) Port() string {
+func (d *DataConn) Port() uint16 {
 	return d.port
 }
 
@@ -47,12 +48,12 @@ func (d *DataConn) Close() error {
 	return d.conn.Close()
 }
 
-func NewDataConn(ip, port string) (*DataConn, error) {
+func NewDataConn(ip string, port uint16) (*DataConn, error) {
 	addr := fmt.Sprintf("%s:%s", ip, port)
 
 	conn, err := net.Dial("tcp", addr)
 	if err != nil {
-		return nil, err
+		return nil, errors.New("NewDataConn Failed")
 	}
 
 	return &DataConn{
